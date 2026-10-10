@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>菱形小偵探 — Sara 的四邊形遊戲</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --pink: #ff8fab;
+  --peach: #ffd6a5;
+  --mint: #caffbf;
+  --sky: #9bf6ff;
+  --lavender: #bdb2ff;
+  --cream: #fff8f0;
+  --ink: #5a4a6a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(160deg, #fff0f6 0%, #e8f7ff 50%, #f0ffe8 100%);
+  font-family: 'ZCOOL KuaiLe', 'Fredoka', sans-serif;
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+}
+h1 {
+  font-size: 2.4rem;
+  margin: 8px 0 4px;
+  background: linear-gradient(90deg, #ff6b9d, #7c6bff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.subtitle { font-size: 1.1rem; opacity: 0.85; margin-bottom: 12px; }
+.score-bar {
+  display: flex;
+  gap: 18px;
+  background: white;
+  padding: 10px 22px;
+  border-radius: 40px;
+  box-shadow: 0 4px 14px rgba(180,140,200,0.2);
+  font-size: 1.15rem;
+  margin-bottom: 14px;
+}
+.card {
+  background: white;
+  border-radius: 28px;
+  padding: 22px;
+  box-shadow: 0 8px 28px rgba(160,120,200,0.18);
+  max-width: 720px;
+  width: 100%;
+  text-align: center;
+}
+.question {
+  font-size: 1.45rem;
+  margin: 8px 0 16px;
+  line-height: 1.4;
+}
+.shape-area {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  min-height: 180px;
+  margin: 10px 0 18px;
+}
+.shape-btn {
+  background: #fff;
+  border: 4px solid #ffe0ec;
+  border-radius: 22px;
+  padding: 12px;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+  width: 140px;
+}
+.shape-btn:hover { transform: translateY(-4px) scale(1.04); box-shadow: 0 8px 18px rgba(255,140,180,0.3); }
+.shape-btn.correct { border-color: #6bcb77; background: #f0fff4; }
+.shape-btn.wrong { border-color: #ff6b6b; background: #fff5f5; animation: shake .4s; }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+svg { display: block; margin: 0 auto; }
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+.choice, .next-btn, .start-btn {
+  font-family: inherit;
+  font-size: 1.25rem;
+  border: none;
+  border-radius: 40px;
+  padding: 12px 26px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #ff8fab, #ffb3c6);
+  color: white;
+  box-shadow: 0 4px 0 #e07090;
+  transition: transform .1s;
+}
+.choice:hover, .next-btn:hover, .start-btn:hover { transform: translateY(-2px); }
+.choice.secondary { background: linear-gradient(135deg, #bdb2ff, #d0c4ff); box-shadow: 0 4px 0 #9a8ee0; }
+.feedback {
+  font-size: 1.3rem;
+  min-height: 36px;
+  margin: 10px 0;
+  font-weight: 600;
+}
+.stars { font-size: 1.6rem; letter-spacing: 4px; }
+.tip {
+  background: #fff8e8;
+  border-radius: 16px;
+  padding: 10px 14px;
+  margin-top: 12px;
+  font-size: 1.05rem;
+  color: #7a5a3a;
+}
+.mode-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.mode-tabs button {
+  font-family: inherit;
+  border: 3px solid #ffe0ec;
+  background: white;
+  border-radius: 20px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+.mode-tabs button.active {
+  background: #ff8fab;
+  color: white;
+  border-color: #ff8fab;
+}
+footer { margin-top: 18px; font-size: 0.95rem; opacity: 0.7; }
+</style>
+</head>
+<body>
+<h1>菱形小偵探</h1>
+<p class="subtitle">Sara 的四邊形冒險 · 9 歲專屬</p>
+
+<div class="score-bar">
+  <span>⭐ 星星：<b id="stars">0</b></span>
+  <span>🎯 答對：<b id="correct">0</b></span>
+  <span>題目：<b id="qnum">1</b></span>
+</div>
+
+<div class="mode-tabs">
+  <button class="active" data-mode="find">找出菱形</button>
+  <button data-mode="yesno">是不是菱形？</button>
+  <button data-mode="property">特性小問答</button>
+</div>
+
+<div class="card" id="game">
+  <div class="question" id="question">準備好了嗎？</div>
+  <div class="shape-area" id="shapes"></div>
+  <div class="choices" id="choices"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="stars" id="starDisplay"></div>
+  <div class="tip" id="tip" style="display:none"></div>
+</div>
+
+<footer>玩法：看圖形、選答案，答對就有星星！慢慢想，沒關係。</footer>
+
+<script>
+const SHAPES = {
+  rhombus: (color="#ff8fab") => `<svg width="110" height="100" viewBox="0 0 110 100"><polygon points="55,8 100,50 55,92 10,50" fill="${color}" stroke="#5a4a6a" stroke-width="3"/></svg>`,
+  square: (color="#9bf6ff") => `<svg width="110" height="100" viewBox="0 0 110 100"><rect x="22" y="18" width="66" height="66" fill="${color}" stroke="#5a4a6a" stroke-width="3" transform="rotate(8 55 51)"/></svg>`,
+  rectangle: (color="#caffbf") => `<svg width="110" height="100" viewBox="0 0 110 100"><rect x="12" y="28" width="86" height="46" fill="${color}" stroke="#5a4a6a" stroke-width="3"/></svg>`,
+  parallelogram: (color="#bdb2ff") => `<svg width="110" height="100" viewBox="0 0 110 100"><polygon points="28,22 98,22 82,78 12,78" fill="${color}" stroke="#5a4a6a" stroke-width="3"/></svg>`,
+  trapezoid: (color="#ffd6a5") => `<svg width="110" height="100" viewBox="0 0 110 100"><polygon points="30,22 80,22 98,78 12,78" fill="${color}" stroke="#5a4a6a" stroke-width="3"/></svg>`,
+  kite: (color="#ffb3c6") => `<svg width="110" height="100" viewBox="0 0 110 100"><polygon points="55,8 92,42 55,92 18,42" fill="${color}" stroke="#5a4a6a" stroke-width="3"/></svg>`,
+  diamondTilt: (color="#ff8fab") => `<svg width="110" height="100" viewBox="0 0 110 100"><polygon points="20,30 70,12 100,60 50,88" fill="${color}" stroke="#5a4a6a" stroke-width="3"/></svg>`,
+};
+
+const TIPS = {
+  rhombus: "菱形：四條邊一樣長！對角相等，對角線互相垂直平分。",
+  square: "正方形也是菱形（四邊相等），同時又是長方形。",
+  rectangle: "長方形對邊相等，四個角都是直角，但鄰邊不一定相等。",
+  parallelogram: "平行四邊形對邊平行且相等，但四邊不一定一樣長。",
+  trapezoid: "梯形只有一組對邊平行。",
+  kite: "箏形有兩組鄰邊相等，但不是菱形（除非四邊都相等）。"
+};
+
+let mode = "find";
+let stars = 0, correctCount = 0, qIndex = 0;
+let answered = false;
+
+const $ = id => document.getElementById(id);
+
+document.querySelectorAll(".mode-tabs button").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".mode-tabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    mode = btn.dataset.mode;
+    nextQuestion();
+  };
+});
+
+function rand(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+function shuffle(a) { return a.sort(() => Math.random()-0.5); }
+
+function nextQuestion() {
+  answered = false;
+  qIndex++;
+  $("qnum").textContent = qIndex;
+  $("feedback").textContent = "";
+  $("tip").style.display = "none";
+  $("shapes").innerHTML = "";
+  $("choices").innerHTML = "";
+
+  if (mode === "find") findMode();
+  else if (mode === "yesno") yesnoMode();
+  else propertyMode();
+}
+
+function findMode() {
+  $("question").textContent = "哪一個是菱形？點它！";
+  const options = shuffle([
+    {key:"rhombus", is:true},
+    {key:rand(["rectangle","trapezoid","parallelogram"]), is:false},
+    {key:rand(["square","kite"]), is:false},
+    {key:"diamondTilt", is:true}
+  ]).slice(0,3);
+  // ensure at least one rhombus
+  if (!options.some(o => o.is)) options[0] = {key:"rhombus", is:true};
+
+  options.forEach(o => {
+    const div = document.createElement("div");
+    div.className = "shape-btn";
+    div.innerHTML = SHAPES[o.key]();
+    div.onclick = () => {
+      if (answered) return;
+      answered = true;
+      if (o.is) {
+        div.classList.add("correct");
+        good("答對啦！這是菱形 ✨");
+        showTip("rhombus");
+      } else {
+        div.classList.add("wrong");
+        bad("不是這個哦～再看看四邊是不是一樣長");
+        showTip(o.key);
+      }
+      addNext();
+    };
+    $("shapes").appendChild(div);
+  });
+}
+
+function yesnoMode() {
+  const keys = ["rhombus","square","rectangle","parallelogram","trapezoid","kite","diamondTilt"];
+  const key = rand(keys);
+  const isRhombus = key === "rhombus" || key === "diamondTilt" || key === "square";
+  $("question").textContent = "這個圖形是菱形嗎？";
+  $("shapes").innerHTML = `<div class="shape-btn" style="cursor:default;border-color:#eee">${SHAPES[key]()}</div>`;
+
+  ["是菱形！", "不是菱形"].forEach((label, i) => {
+    const b = document.createElement("button");
+    b.className = "choice" + (i ? " secondary" : "");
+    b.textContent = label;
+    b.onclick = () => {
+      if (answered) return;
+      answered = true;
+      const choseYes = i === 0;
+      if (choseYes === isRhombus) {
+        good(isRhombus ? "對！四邊一樣長就是菱形～" : "對！它不是菱形。");
+      } else {
+        bad(isRhombus ? "其實是菱形哦，四邊都相等。" : "它不是菱形，四邊長度不一樣。");
+      }
+      showTip(isRhombus ? "rhombus" : key);
+      addNext();
+    };
+    $("choices").appendChild(b);
+  });
+}
+
+function propertyMode() {
+  const qs = [
+    { q: "菱形的四條邊有什麼特別？", a: ["一樣長", "不一樣長", "只有兩條長"], correct: 0, tip: "rhombus" },
+    { q: "正方形是不是菱形？", a: ["是，因為四邊相等", "不是", "有時是"], correct: 0, tip: "square" },
+    { q: "長方形一定是菱形嗎？", a: ["不一定，要四邊相等才是", "一定是", "一定不是"], correct: 0, tip: "rectangle" },
+    { q: "菱形的對角線會怎樣？", a: ["互相垂直平分", "互相平行", "一樣長一定"], correct: 0, tip: "rhombus" },
+    { q: "平行四邊形的對邊怎樣？", a: ["平行而且相等", "一定一樣長全部", "都不平行"], correct: 0, tip: "parallelogram" },
+  ];
+  const item = rand(qs);
+  $("question").textContent = item.q;
+  $("shapes").innerHTML = SHAPES.rhombus("#ffb3c6");
+  item.a.forEach((label, i) => {
+    const b = document.createElement("button");
+    b.className = "choice" + (i ? " secondary" : "");
+    b.textContent = label;
+    b.onclick = () => {
+      if (answered) return;
+      answered = true;
+      if (i === item.correct) good("好棒！記得住了 🌟");
+      else bad("再想想～看提示吧");
+      showTip(item.tip);
+      addNext();
+    };
+    $("choices").appendChild(b);
+  });
+}
+
+function good(msg) {
+  stars += 1;
+  correctCount += 1;
+  $("stars").textContent = stars;
+  $("correct").textContent = correctCount;
+  $("feedback").textContent = msg;
+  $("feedback").style.color = "#2e9e4f";
+  $("starDisplay").textContent = "⭐".repeat(Math.min(stars, 8));
+}
+function bad(msg) {
+  $("feedback").textContent = msg;
+  $("feedback").style.color = "#e05a5a";
+}
+function showTip(key) {
+  $("tip").style.display = "block";
+  $("tip").textContent = "小提示：" + (TIPS[key] || TIPS.rhombus);
+}
+function addNext() {
+  const b = document.createElement("button");
+  b.className = "next-btn";
+  b.textContent = "下一題 →";
+  b.onclick = nextQuestion;
+  $("choices").appendChild(b);
+}
+
+// start
+nextQuestion();
+</script>
+</body>
+</html>
